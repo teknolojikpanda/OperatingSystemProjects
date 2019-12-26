@@ -14,6 +14,7 @@ typedef struct linkedList {
     int arrivalTime;
     int priority;
     int waitingTime;
+    int resumeStatus;
 }linkedList;
 
 void FCFS(linkedList process[]){
@@ -76,7 +77,8 @@ void RR(linkedList process[]){
 int main(int argc, char **argv) {
     struct linkedList process[SIZE];
     int i = 0;
-    int choice;
+    int mode = 0;// 0 => Preemptive && 1 => Non-Preemptive
+    int choice,option,option2;
     FILE *fp;
     char line[LINE_MAX];
     unsigned int num[3];
@@ -105,13 +107,79 @@ int main(int argc, char **argv) {
                 abort ();
         }
 
-    FCFS(process);
-    //SJFS_nonpreemptive(process);
-    //SJFS_preemptive(process);
-    //PS_nonpreemptive(process);
-    //PS_preemptive(process);
-    //RR(process);
+    do{
+        if (mode == 0)
+            printf("MODE : Preemptive\n");
+        else if (mode == 1)
+            printf("MODE : Preemptive\n");
+        printf("1) Scheduling Method\n");
+        printf("2) Preemptive Mode\n");
+        printf("3) Non-Preemptive Mode\n");
+        printf("4) Show Result\n");
+        printf("5) End Program\n");
+        printf("Option> ");
+        scanf("%d",&option);
+        switch (option){
+            case 1:
+                if (mode == 0)
+                    printf("\n\n\n1\nMODE : Preemptive\n");
+                else if (mode == 1)
+                    printf("\nMODE : Preemptive\n");
+                printf("1) First Come, First Served Scheduling\n");
+                printf("2) Shortest-Job-First Scheduling\n");
+                printf("3) Priority Scheduling\n");
+                printf("4) Round-Robin Scheduling\n");
+                printf("5) Back\n");
+                printf("Option> ");
+                scanf("%d",&option2);
+                switch (option2){
+                    case 1:
+                        FCFS(process);
+                        break;
+                    case 2:
+                        if (mode == 0){
+                            //SJFS_preemptive(process);
+                        }
+                        if (mode == 1){
+                            //SJFS_nonpreemptive(process);
+                        }
+                        break;
+                    case 3:
+                        if (mode == 0){
+                            //PS_preemptive(process);
+                        }
+                        if (mode == 1){
+                            //PS_nonpreemptive(process);
+                        }
+                        break;
+                    case 4:
+                        //RR(process);
+                        break;
+                    case 5:
+                        break;
+                    default:
+                        printf("Invalid Option!\n");
+                        break;
+                }
+                break;
+            case 2:
+                mode = 0;
+                break;
+            case 3:
+                mode = 1;
+                break;
+            case 4:
 
+                //Show Result
+
+                break;
+            case 5:
+                abort();
+            default:
+                printf("Invalid Option!");
+                break;
+        }
+    }while (option != 5);
     return 0;
 }
 
