@@ -8,8 +8,7 @@
 #define SIZE 5
 #define LINE_MAX 1024
 
-typedef struct linkedList {
-
+struct linkedList {
     int burstTime;
     int arrivalTime;
     int priority;
@@ -17,9 +16,9 @@ typedef struct linkedList {
     int resumeStatus;
 }linkedList;
 
-void FCFS(linkedList process[]){
+void FCFS(struct linkedList process[]){
 
-    linkedList temp[SIZE];
+    struct linkedList temp[SIZE];
     int i;
     int totalWaiting=0;
     double averageWaiting;
@@ -27,7 +26,7 @@ void FCFS(linkedList process[]){
     for(i=0;i<SIZE;i++)
         temp[i]=process[i];
 
-    linkedList list;
+    struct linkedList list;
     int a,b;
     for(a=1;a<SIZE;a++) {
         for (b = 0; b < SIZE - a; b++) {
@@ -54,31 +53,81 @@ void FCFS(linkedList process[]){
     printf("\nAverage waiting time: %f ms\n",averageWaiting);
 }
 
-void SJFS_nonpreemptive(linkedList process[]){
+void SJFS_nonpreemptive(struct linkedList process[]){
 
 }
 
-void SJFS_preemptive(linkedList process[]){
+void SJFS_preemptive(struct linkedList process[]){
 
 }
 
-void PS_preemptive(linkedList process[]){
+void PS_preemptive(struct linkedList process[]){
 
 }
 
-void PS_nonpreemptive(linkedList process[]){
+void PS_nonpreemptive(struct linkedList process[]){
 
 }
 
-void RR(linkedList process[]){
+void RR(struct linkedList process[], int quantumTime){
+    int i,x;
+    int y = 0;
+    int resumeStatus=0;
+    int currentTime=0;
+    int totalWaitingTime=0;
+    double averageWaiting;
+    struct linkedList temp1[10],temp2[10];
 
+    for(i=0;i<SIZE;i++)
+        temp1[i]=process[i];
+
+    struct linkedList list;
+    int a,b;
+    for(a=1;a<SIZE;a++) {
+        for (b = 0; b < SIZE - a; b++) {
+            if (temp1[b].arrivalTime > temp1[b + 1].arrivalTime) {
+                list = temp1[b];
+                temp1[b] = temp1[b + 1];
+                temp1[b + 1] = list;
+            }
+        }
+    }
+
+    for(i = 0;i < SIZE; i++)
+        temp2[i]=temp1[i];
+
+    do{
+        if(y>SIZE-1){y=0;}
+
+        x=0;
+        while(x<quantumTime && temp1[y].burstTime > 0){
+            x++;
+            currentTime++;
+            temp1[y].burstTime--;
+        }
+
+        if(temp1[y].burstTime <= 0 && temp1[y].resumeStatus != 1){
+            temp1[y].waitingTime = currentTime - temp2[y].burstTime - temp1[y].arrivalTime;
+            resumeStatus++;
+            temp1[y].resumeStatus = 1;
+            totalWaitingTime = totalWaitingTime + temp1[y].waitingTime;
+        }
+        y++;
+    }while (resumeStatus < SIZE);
+
+    printf("Scheduling Method : First Come First Served\nProcess Waiting Times:");
+    for(i = 0; i < SIZE; i++) {
+        printf("\nP%d: %d ms", i+1, temp1[i].waitingTime);
+    }
+    averageWaiting = (double)totalWaitingTime/SIZE;
+    printf("\nAverage waiting time = %f ms\n",averageWaiting);
 }
 
 int main(int argc, char **argv) {
     struct linkedList process[SIZE];
     int i = 0;
     int mode = 0;// 0 => Preemptive && 1 => Non-Preemptive
-    int choice,option,option2;
+    int choice,option,option2,quantumTime;
     FILE *fp;
     char line[LINE_MAX];
     unsigned int num[3];
@@ -98,6 +147,7 @@ int main(int argc, char **argv) {
                     process[i].priority = num[2];
                     i++;
                 }
+
                 fclose(fp);
                 break;
             case 'o':
@@ -153,7 +203,9 @@ int main(int argc, char **argv) {
                         }
                         break;
                     case 4:
-                        //RR(process);
+                        printf("\n Enter quantum time : ");
+                        scanf("%d",&quantumTime);
+                        RR(process, quantumTime);
                         break;
                     case 5:
                         break;
@@ -182,4 +234,3 @@ int main(int argc, char **argv) {
     }while (option != 5);
     return 0;
 }
-
