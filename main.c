@@ -16,7 +16,7 @@ struct linkedList {
     int resumeStatus;
 }linkedList;
 
-void FCFS(struct linkedList process[]){
+void FCFS(struct linkedList process[], FILE *fp){
 
     struct linkedList temp[SIZE];
     int i;
@@ -47,10 +47,19 @@ void FCFS(struct linkedList process[]){
     averageWaiting = (double)totalWaiting/SIZE;
 
     printf("Scheduling Method : First Come First Served\nProcess Waiting Times:");
+    //Write Consol
     for(i = 0; i < SIZE; i++) {
         printf("\nP%d: %d ms", i+1, temp[i].waitingTime);
     }
     printf("\nAverage waiting time: %f ms\n",averageWaiting);
+    //Write File
+    fprintf(fp,"Scheduling Method : First Come First Served\nProcess Waiting Times:");
+
+    for(i = 0; i < SIZE; i++) {
+        fprintf(fp,"\nP%d: %d ms", i+1, temp[i].waitingTime);
+    }
+    fprintf(fp,"\nAverage waiting time: %f ms\n",averageWaiting);
+    fclose(fp);
 }
 
 void SJFS_nonpreemptive(struct linkedList process[]){
@@ -69,7 +78,7 @@ void PS_nonpreemptive(struct linkedList process[]){
 
 }
 
-void RR(struct linkedList process[], int quantumTime){
+void RR(struct linkedList process[], int quantumTime, FILE *fp){
     int i,x;
     int y = 0;
     int resumeStatus=0;
@@ -115,12 +124,21 @@ void RR(struct linkedList process[], int quantumTime){
         y++;
     }while (resumeStatus < SIZE);
 
-    printf("Scheduling Method : First Come First Served\nProcess Waiting Times:");
+    averageWaiting = (double)totalWaitingTime/SIZE;
+    //Write Consol
+    printf("Scheduling Method : Round-Robin\nProcess Waiting Times:");
     for(i = 0; i < SIZE; i++) {
         printf("\nP%d: %d ms", i+1, temp1[i].waitingTime);
     }
-    averageWaiting = (double)totalWaitingTime/SIZE;
-    printf("\nAverage waiting time = %f ms\n",averageWaiting);
+    printf("\nAverage waiting time: %f ms\n",averageWaiting);
+    //Write File
+    fprintf(fp,"Scheduling Method : First Come First Served\nProcess Waiting Times:");
+
+    for(i = 0; i < SIZE; i++) {
+        fprintf(fp,"\nP%d: %d ms", i+1, temp1[i].waitingTime);
+    }
+    fprintf(fp,"\nAverage waiting time: %f ms\n",averageWaiting);
+    fclose(fp);
 }
 
 int main(int argc, char **argv) {
@@ -128,7 +146,7 @@ int main(int argc, char **argv) {
     int i = 0;
     int mode = 0;// 0 => Preemptive && 1 => Non-Preemptive
     int choice,option,option2,quantumTime;
-    FILE *fp;
+    FILE *fpRead,*fpWrite;
     char line[LINE_MAX];
     unsigned int num[3];
 
@@ -138,20 +156,19 @@ int main(int argc, char **argv) {
         switch (choice)
         {
             case 'f':
-                if ((fp = fopen(optarg, "r")) == NULL)
+                if ((fpRead = fopen(optarg, "r")) == NULL)
                     return 0;
-                while (fgets(line, LINE_MAX, fp) != NULL) {
+                while (fgets(line, LINE_MAX, fpRead) != NULL) {
                     sscanf(line,"%d:%d:%d\n",&num[0],&num[1],&num[2]);
                     process[i].burstTime = num[0];
                     process[i].arrivalTime = num[1];
                     process[i].priority = num[2];
                     i++;
                 }
-
-                fclose(fp);
+                fclose(fpRead);
                 break;
             case 'o':
-
+                fpWrite = fopen(optarg,"w+");
                 break;
             default:
                 abort ();
@@ -184,7 +201,7 @@ int main(int argc, char **argv) {
                 scanf("%d",&option2);
                 switch (option2){
                     case 1:
-                        FCFS(process);
+                        FCFS(process, fpWrite);
                         break;
                     case 2:
                         if (mode == 0){
@@ -205,7 +222,7 @@ int main(int argc, char **argv) {
                     case 4:
                         printf("\n Enter quantum time : ");
                         scanf("%d",&quantumTime);
-                        RR(process, quantumTime);
+                        RR(process, quantumTime, fpWrite);
                         break;
                     case 5:
                         break;
