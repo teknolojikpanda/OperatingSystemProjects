@@ -9,6 +9,7 @@
 #define LINE_MAX 1024
 
 struct linkedList {
+    int name;
     int burstTime;
     int arrivalTime;
     int priority;
@@ -74,8 +75,58 @@ void PS_preemptive(struct linkedList process[]){
 
 }
 
-void PS_nonpreemptive(struct linkedList process[]){
+void PS_nonpreemptive(struct linkedList process[], FILE *fp){
+    struct linkedList temp[SIZE];
+    struct  linkedList list1,list2;
+    int i,j,x,y;
+    int totalWaitingTime=0;
+    double averageWaitingTime;
 
+    for(i=0;i<SIZE;i++) {
+        temp[i] = process[i];
+    }
+
+    for(i=2;i<SIZE;i++)
+        for(j=1;j<SIZE-i+1;j++){
+            if(temp[j].priority > temp[j+1].priority){
+                list1 = temp[j];
+                temp[j] = temp[j+1];
+                temp[j+1] = list1;
+            }
+        }
+
+    totalWaitingTime = temp[0].waitingTime = 0;
+
+    for(i=1;i<SIZE;i++){
+        temp[i].waitingTime = (temp[i-1].burstTime + temp[i-1].arrivalTime + temp[i-1].waitingTime) - temp[i].arrivalTime;
+        totalWaitingTime+=temp[i].waitingTime;
+    }
+    averageWaitingTime = (double)totalWaitingTime/SIZE;
+
+    for(x=1;x<SIZE;x++) {
+        for (y = 0; y < SIZE - x; y++) {
+            if (temp[y].name > temp[y + 1].name) {
+                list2 = temp[y];
+                temp[y] = temp[y + 1];
+                temp[y + 1] = list2;
+            }
+        }
+    }
+
+    printf("Scheduling Method : Priority Scheduling (Non-Preemptive)\nProcess Waiting Times:");
+    //Write Consol
+    for(i = 0; i < SIZE; i++) {
+        printf("\nP%d: %d ms", i+1, temp[i].waitingTime);
+    }
+    printf("\nAverage waiting time: %f ms\n",averageWaitingTime);
+    //Write File
+    fprintf(fp,"Scheduling Method : Priority Scheduling (Non-Preemptive)\nProcess Waiting Times:");
+
+    for(i = 0; i < SIZE; i++) {
+        fprintf(fp,"\nP%d: %d ms", i+1, temp[i].waitingTime);
+    }
+    fprintf(fp,"\nAverage waiting time: %f ms\n",averageWaitingTime);
+    fclose(fp);
 }
 
 void RR(struct linkedList process[], int quantumTime, FILE *fp){
@@ -160,6 +211,7 @@ int main(int argc, char **argv) {
                     return 0;
                 while (fgets(line, LINE_MAX, fpRead) != NULL) {
                     sscanf(line,"%d:%d:%d\n",&num[0],&num[1],&num[2]);
+                    process[i].name = i+1;
                     process[i].burstTime = num[0];
                     process[i].arrivalTime = num[1];
                     process[i].priority = num[2];
@@ -178,7 +230,7 @@ int main(int argc, char **argv) {
         if (mode == 0)
             printf("MODE : Preemptive\n");
         else if (mode == 1)
-            printf("MODE : Preemptive\n");
+            printf("MODE : Non-Preemptive\n");
         printf("1) Scheduling Method\n");
         printf("2) Preemptive Mode\n");
         printf("3) Non-Preemptive Mode\n");
@@ -191,7 +243,7 @@ int main(int argc, char **argv) {
                 if (mode == 0)
                     printf("\n\n\n1\nMODE : Preemptive\n");
                 else if (mode == 1)
-                    printf("\nMODE : Preemptive\n");
+                    printf("\nMODE : Non-Preemptive\n");
                 printf("1) First Come, First Served Scheduling\n");
                 printf("2) Shortest-Job-First Scheduling\n");
                 printf("3) Priority Scheduling\n");
@@ -216,7 +268,7 @@ int main(int argc, char **argv) {
                             //PS_preemptive(process);
                         }
                         if (mode == 1){
-                            //PS_nonpreemptive(process);
+                            PS_nonpreemptive(process,fpWrite);
                         }
                         break;
                     case 4:
