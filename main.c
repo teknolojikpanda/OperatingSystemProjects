@@ -62,12 +62,75 @@ void FCFS(struct linkedList process[], FILE *fp){
     fclose(fp);
 }
 
-void SJFS_nonpreemptive(struct linkedList process[]){
+void SJFS_nonpreemptive(struct linkedList process[], FILE *fp){
 
 }
 
-void SJFS_preemptive(struct linkedList process[]){
+void SJFS_preemptive(struct linkedList process[], FILE *fp){
+    struct linkedList temp[SIZE];
+    int i,x,timer,shortestJob,totalBurstTime;
+    int totalWaitingTime=0;
+    double averageWaitingTime;
 
+    for(i=0;i<SIZE;i++) {
+        temp[i] = process[i];
+        totalBurstTime += process[i].burstTime;
+    }
+
+    struct linkedList list;
+    int a,b;
+    for(a=1;a<SIZE;a++) {
+        for (b = 0; b < SIZE - a; b++) {
+            if (temp[b].arrivalTime > temp[b + 1].arrivalTime) {
+                list = temp[b];
+                temp[b] = temp[b + 1];
+                temp[b + 1] = list;
+            }
+        }
+    }
+
+    totalWaitingTime = temp[0].waitingTime = 0;
+
+    i=0;
+    for (timer = 0; timer < totalBurstTime; timer++) {
+        if(temp[i].burstTime > 0 && temp[i].arrivalTime <= timer)
+            temp[i].burstTime--;
+
+        if(temp[i].burstTime<=0 && temp[i].resumeStatus != 1)
+        {
+            temp[i].resumeStatus = 1;
+            temp[i].waitingTime = (timer+1) - process[i].burstTime - temp[i].arrivalTime;
+            totalWaitingTime+=temp[i].waitingTime;
+        }
+        shortestJob = 65435;
+        for(x = 0; x < SIZE; x++){
+
+            if(temp[x].arrivalTime <= (timer+1) && temp[x].resumeStatus != 1){
+
+                if(shortestJob != temp[x].burstTime && shortestJob > temp[x].burstTime){
+                    shortestJob = temp[x].burstTime;
+                    i=x;
+                }
+            }
+        }
+    }
+
+    averageWaitingTime = (double)totalWaitingTime/SIZE;
+
+    printf("Scheduling Method : Priority Scheduling (Preemptive)\nProcess Waiting Times:");
+    //Write Consol
+    for(i = 0; i < SIZE; i++) {
+        printf("\nP%d: %d ms", i+1, temp[i].waitingTime);
+    }
+    printf("\nAverage waiting time: %f ms\n",averageWaitingTime);
+    //Write File
+    fprintf(fp,"Scheduling Method : Priority Scheduling (Preemptive)\nProcess Waiting Times:");
+
+    for(i = 0; i < SIZE; i++) {
+        fprintf(fp,"\nP%d: %d ms", i+1, temp[i].waitingTime);
+    }
+    fprintf(fp,"\nAverage waiting time: %f ms\n",averageWaitingTime);
+    fclose(fp);
 }
 
 void PS_preemptive(struct linkedList process[], FILE *fp){
@@ -319,7 +382,7 @@ int main(int argc, char **argv) {
                         break;
                     case 2:
                         if (mode == 0){
-                            //SJFS_preemptive(process);
+                            SJFS_preemptive(process,fpWrite);
                         }
                         if (mode == 1){
                             //SJFS_nonpreemptive(process);
