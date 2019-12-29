@@ -18,7 +18,8 @@ struct linkedList {
 }linkedList;
 
 void FCFS(struct linkedList process[], FILE *fp){
-    struct linkedList temp[SIZE];
+    struct linkedList *temp;
+    temp = (struct linkedList *) malloc (SIZE*sizeof(struct linkedList));
     int i;
     int totalWaiting=0;
     double averageWaiting;
@@ -49,7 +50,7 @@ void FCFS(struct linkedList process[], FILE *fp){
     printf("Scheduling Method : First Come First Served\nProcess Waiting Times:");
     //Write Consol
     for(i = 0; i < SIZE; i++) {
-        printf("\nP%d: %d ms", i+1, temp[i].waitingTime);
+        printf("\nP%d: %d ms\n", i+1, temp[i].waitingTime);
     }
     printf("\nAverage waiting time: %f ms\n",averageWaiting);
     //Write File
@@ -63,11 +64,74 @@ void FCFS(struct linkedList process[], FILE *fp){
 }
 
 void SJFS_nonpreemptive(struct linkedList process[], FILE *fp){
+    struct linkedList *temp, list, list2;
+    temp = (struct linkedList *) malloc (SIZE*sizeof(struct linkedList));
+    int i,a,b;
+    int totalWaitingTime=0;
+    double averageWaitingTime;
 
+    for(i=0;i<SIZE;i++) {
+        temp[i] = process[i];
+    }
+
+    for(a=1;a<SIZE;a++) {
+        for (b = 0; b < SIZE - a; b++) {
+            if (temp[b].arrivalTime > temp[b + 1].arrivalTime) {
+                list2 = temp[b];
+                temp[b] = temp[b + 1];
+                temp[b + 1] = list2;
+            }
+        }
+    }
+
+    for(a=2;a<SIZE;a++) {
+        for (b = 1; b < SIZE - a+1; b++) {
+            if (temp[b].burstTime > temp[b + 1].burstTime) {
+                list = temp[b];
+                temp[b] = temp[b + 1];
+                temp[b + 1] = list;
+            }
+        }
+    }
+
+    totalWaitingTime = temp[0].waitingTime = 0;
+
+    for(i = 1; i < SIZE; i++){
+        temp[i].waitingTime = (temp[i-1].burstTime + temp[i-1].arrivalTime + temp[i-1].waitingTime) - temp[i].arrivalTime;
+        totalWaitingTime += temp[i].waitingTime;
+    }
+
+    averageWaitingTime = (double)totalWaitingTime/SIZE;
+
+    for(a=1;a<SIZE;a++) {
+        for (b = 0; b < SIZE - a; b++) {
+            if (temp[b].name > temp[b + 1].name) {
+                list = temp[b];
+                temp[b] = temp[b + 1];
+                temp[b + 1] = list;
+            }
+        }
+    }
+
+    printf("Scheduling Method : Priority Scheduling (Preemptive)\nProcess Waiting Times:");
+    //Write Consol
+    for(i = 0; i < SIZE; i++) {
+        printf("\nP%d: %d ms", i+1, temp[i].waitingTime);
+    }
+    printf("\nAverage waiting time: %f ms\n",averageWaitingTime);
+    //Write File
+    fprintf(fp,"Scheduling Method : Priority Scheduling (Preemptive)\nProcess Waiting Times:");
+
+    for(i = 0; i < SIZE; i++) {
+        fprintf(fp,"\nP%d: %d ms", i+1, temp[i].waitingTime);
+    }
+    fprintf(fp,"\nAverage waiting time: %f ms\n",averageWaitingTime);
+    fclose(fp);
 }
 
 void SJFS_preemptive(struct linkedList process[], FILE *fp){
-    struct linkedList temp[SIZE];
+    struct linkedList *temp;
+    temp = (struct linkedList *) malloc (SIZE*sizeof(struct linkedList));
     int i,x,timer,shortestJob,totalBurstTime;
     int totalWaitingTime=0;
     double averageWaitingTime;
@@ -134,7 +198,8 @@ void SJFS_preemptive(struct linkedList process[], FILE *fp){
 }
 
 void PS_preemptive(struct linkedList process[], FILE *fp){
-    struct linkedList temp[SIZE];
+    struct linkedList *temp;
+    temp = (struct linkedList *) malloc (SIZE*sizeof(struct linkedList));
     int i,x,timer,minimumPriority,totalBurstTime;
     int totalWaitingTime=0;
     double averageWaitingTime;
@@ -201,7 +266,8 @@ void PS_preemptive(struct linkedList process[], FILE *fp){
 }
 
 void PS_nonpreemptive(struct linkedList process[], FILE *fp){
-    struct linkedList temp[SIZE];
+    struct linkedList *temp;
+    temp = (struct linkedList *) malloc (SIZE*sizeof(struct linkedList));
     struct  linkedList list1,list2;
     int i,j,x,y;
     int totalWaitingTime=0;
@@ -261,7 +327,9 @@ void RR(struct linkedList process[], int quantumTime, FILE *fp){
     int currentTime=0;
     int totalWaitingTime=0;
     double averageWaiting;
-    struct linkedList temp1[10],temp2[10];
+    struct linkedList *temp1, *temp2;
+    temp1 = (struct linkedList *) malloc (SIZE*sizeof(struct linkedList));
+    temp2 = (struct linkedList *) malloc (SIZE*sizeof(struct linkedList));
 
     for(i=0;i<SIZE;i++)
         temp1[i]=process[i];
@@ -318,12 +386,14 @@ void RR(struct linkedList process[], int quantumTime, FILE *fp){
 }
 
 int main(int argc, char **argv) {
-    struct linkedList process[SIZE];
+    struct linkedList *process;
+    process = (struct linkedList *) malloc (SIZE*sizeof(struct linkedList));
     int i = 0;
     int mode = 0;// 0 => Preemptive && 1 => Non-Preemptive
     int choice,option,option2,quantumTime;
     FILE *fpRead,*fpWrite;
     char line[LINE_MAX];
+    char *ovalue = NULL;
     unsigned int num[3];
 
     opterr = 0;
@@ -345,12 +415,12 @@ int main(int argc, char **argv) {
                 fclose(fpRead);
                 break;
             case 'o':
+                ovalue = optarg;
                 fpWrite = fopen(optarg,"w+");
                 break;
             default:
                 abort ();
         }
-
     do{
         if (mode == 0)
             printf("MODE : Preemptive\n");
@@ -385,7 +455,7 @@ int main(int argc, char **argv) {
                             SJFS_preemptive(process,fpWrite);
                         }
                         if (mode == 1){
-                            //SJFS_nonpreemptive(process);
+                            SJFS_nonpreemptive(process,fpWrite);
                         }
                         break;
                     case 3:
@@ -415,9 +485,10 @@ int main(int argc, char **argv) {
                 mode = 1;
                 break;
             case 4:
-
-                //Show Result
-
+                fpRead = fopen(ovalue, "r");
+                while (fgets(line, LINE_MAX, fpRead)){
+                    printf(line);
+                }
                 break;
             case 5:
                 abort();
